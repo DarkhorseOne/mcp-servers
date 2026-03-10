@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
@@ -6,7 +8,7 @@ import { registerAllTools, TOOL_COUNT } from './tools.generated.js';
 export function createStdioServer(): McpServer {
   const server = new McpServer({
     name: '@darkhorseone/mcp-server-uk-parliament-members',
-    version: '0.1.0',
+    version: '1.0.0',
   });
 
   registerAllTools(server);

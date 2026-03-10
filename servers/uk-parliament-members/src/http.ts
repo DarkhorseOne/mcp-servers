@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { createServer } from 'node:http';
 
 import { ENDPOINTS } from './endpoints.generated.js';
