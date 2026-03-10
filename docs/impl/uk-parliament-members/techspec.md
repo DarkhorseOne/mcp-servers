@@ -1,249 +1,334 @@
-# UK Parliament Members MCP Server 技术规格（全量 Endpoint）
+# UK Parliament Members MCP Server 技术规格（反向修正版）
 
-## 0. Codex 一口气执行入口（先做这个）
+> 目标：保证在一个全新项目中，**只给本文件 + `swagger.json`**，即可由智能编码代理一次性完成交付（实现 + 测试 +可运行）。
 
-本节是给 Codex 的**直接执行指令**，目标是：读取本技术规格后，不再二次澄清，直接完成开发。
+---
 
-### 0.1 变量约定（可复用到后续几十个 MCP Server）
+## 0. 一口气执行入口（必须按此执行）
+
+### 0.1 输入与变量
 
 ```bash
 SERVER_SLUG="uk-parliament-members"
 PACKAGE_NAME="@darkhorseone/mcp-server-${SERVER_SLUG}"
 PACKAGE_DIR="servers/${SERVER_SLUG}"
+SWAGGER_PATH="docs/impl/uk-parliament-members/swagger.json"
 ```
 
-批量复用时，只替换 `SERVER_SLUG`，其余命名规则保持不变。
+### 0.2 产物文件清单（必须完整）
 
-### 0.2 创建下级项目（不依赖额外脚手架）
+在 `${PACKAGE_DIR}` 生成并维护以下文件：
+
+- `package.json`
+- `tsconfig.json`
+- `README.md`
+- `src/index.ts`（stdio MCP 入口）
+- `src/http.ts`（HTTP proxy 入口）
+- `src/core.ts`（参数解析、上游调用、错误映射）
+- `src/endpoints.generated.ts`（由 swagger 生成的 endpoint registry）
+- `src/tools.generated.ts`（MCP tools 注册与输入 schema 构建）
+- `test/endpoints.generated.test.ts`
+- `test/tools.generated.test.ts`
+- `test/http.proxy.test.ts`
+
+### 0.3 端到端步骤（严格顺序）
+
+1. 读取 `swagger.json`，提取所有 `paths[*].get` endpoints（本例应为 43 个）。
+2. 生成 `endpoints.generated.ts`：
+   - endpoint 基础信息：`path` / `method` / `toolName` / `summary`
+   - 参数信息：`name` / `in` / `required` / `type`
+   - **必须提取参数 `description`（若 swagger 有）**
+   - `enum` 字段预留（可选）
+3. 生成 `core.ts`：参数校验与转换、上游请求、统一信封、错误映射。
+4. 生成 `tools.generated.ts`：为每个 endpoint 注册一个 MCP tool，并构建 `inputSchema`。
+5. 生成 `index.ts`（stdio 默认启动）和 `http.ts`（`/healthz` + `/proxy/*`）。
+6. 生成测试并跑通：test + typecheck + build。
+7. 对照本文 DoD 逐条自检，全部满足后结束。
+
+---
+
+## 1. 设计目标（必须同时满足）
+
+1. **stdio MCP Server（默认）**
+   - 将 swagger 全量 GET endpoints 转为 MCP tools。
+2. **HTTP Proxy Server（扩展）**
+   - 基于同一 endpoint registry 完成参数校验、路径匹配与上游转发。
+
+---
+
+## 2. 约束与命名
+
+### 2.1 包命名
+
+- 规则：`@darkhorseone/mcp-server-<slug>`
+- 本项目固定：`@darkhorseone/mcp-server-uk-parliament-members`
+
+### 2.2 运行协议
+
+- 默认：`stdio`
+- 扩展：`http`
+
+### 2.3 技术栈约束
+
+- TypeScript（strict）
+- ESM（`type: module`）
+- MCP SDK：`@modelcontextprotocol/sdk`
+- 校验建模：`zod`
+- 测试：`vitest`
+- 构建：`tsup`
+
+---
+
+## 3. Swagger → Endpoint Registry 映射规范
+
+### 3.1 类型定义（必须）
+
+在 `src/endpoints.generated.ts` 定义：
+
+```ts
+export type ParameterType = 'string' | 'number' | 'boolean' | 'array:string' | 'array:number';
+
+export interface EndpointParameter {
+  name: string;
+  in: 'path' | 'query';
+  required: boolean;
+  type: ParameterType;
+  description?: string;
+  enum?: Array<string | number | boolean>;
+}
+
+export interface EndpointDefinition {
+  path: string;
+  method: 'GET';
+  toolName: string;
+  summary: string;
+  pathParams: EndpointParameter[];
+  queryParams: EndpointParameter[];
+}
+```
+
+### 3.2 参数 type 映射
+
+从 OpenAPI parameter schema 映射到 `ParameterType`：
+
+- `type: string` → `string`
+- `type: integer|number` → `number`
+- `type: boolean` → `boolean`
+- `type: array` + `items.number|integer` → `array:number`
+- `type: array` + `items.string` → `array:string`
+- 对 `allOf` / `$ref`：解析到最终基础类型（若无法解析，默认按 `number`/`string` 保守映射并保持与现有 endpoint 行为一致）
+
+### 3.3 description / enum 提取规则（关键）
+
+- description：从 `paths[path].get.parameters[*].description` 提取。
+- 匹配键：`endpoint.path + parameter.name + parameter.in`。
+- 仅当 description 为非空字符串时写入 `EndpointParameter.description`。
+- enum：若 parameter schema 中存在 enum（直接或经 `$ref` 解析可得），写入 `EndpointParameter.enum`。
+
+### 3.4 工具名规则
+
+建议稳定规则：
+
+- 去掉前缀 `/api/`
+- 按路径段 snake_case
+- path 参数片段转换为语义后缀（例如 `{id}` + endpoint 语义）
+- 最终保证唯一性（用测试约束）
+
+> 本项目现有工具名已固定在 `ENDPOINTS`，新项目可复用此生成策略，但必须保证 deterministic（同一 swagger 多次生成结果一致）。
+
+---
+
+## 4. Runtime 规范（core.ts）
+
+### 4.1 参数解析
+
+- `number`：接受 number 或可解析数字字符串。
+- `boolean`：接受 boolean 或字符串 `true|false|1|0`（不区分大小写）。
+- `string`：必须为非空字符串。
+- `array:number`：接受数组或逗号分隔字符串，逐项按 number 解析。
+- `array:string`：接受数组或逗号分隔字符串，逐项按 string 解析。
+
+### 4.2 required 校验
+
+- 对 `required: true` 参数，`undefined | null | ''` 一律报错。
+- 抛出 `EndpointValidationError`，并包含参数上下文。
+
+### 4.3 Upstream 调用
+
+- `apiBaseUrl` 默认：`https://members-api.parliament.uk`
+- `requestTimeoutMs` 默认：`10000`
+- 请求头：`accept: application/json, text/plain;q=0.9, */*;q=0.8`
+
+### 4.4 标准成功信封
+
+```json
+{
+  "status": 200,
+  "data": {},
+  "upstream_path": "/api/...",
+  "retrieved_at": "ISO-8601"
+}
+```
+
+### 4.5 标准错误信封
+
+```json
+{
+  "status": 400,
+  "error": {
+    "code": "INVALID_PARAMS | UPSTREAM_TIMEOUT | UPSTREAM_NETWORK_ERROR | UPSTREAM_ERROR",
+    "message": "...",
+    "details": {}
+  },
+  "upstream_path": "/api/...",
+  "retrieved_at": "ISO-8601"
+}
+```
+
+状态码映射：
+
+- 参数错误：400
+- 上游超时：504
+- 上游网络错误：502
+- 未知内部错误：500
+
+---
+
+## 5. MCP Tool 规范（tools.generated.ts）
+
+### 5.1 注册规则
+
+- 每个 endpoint 注册一个 tool。
+- `title = toolName`
+- `description = endpoint.summary`
+- `inputSchema = endpointInputSchema(endpoint)`
+
+### 5.2 inputSchema 规则（Zod）
+
+- 由 `pathParams + queryParams` 共同构建 `z.object(shape)`。
+- required 参数为必填；其余 `.optional()`。
+- 参数 `description` 写入 schema `describe(...)`，确保体现在 tools 元信息。
+- 参数 `enum` 存在时，构建 literal union 合并到基础 schema。
+
+### 5.3 tool handler 输出
+
+- 成功：
+  - `content: [{ type: 'text', text: JSON.stringify(result) }]`
+  - `structuredContent: result`
+- 失败：
+  - `isError: true`
+  - `content: [{ type: 'text', text: JSON.stringify(errorEnvelope) }]`
+  - `structuredContent: errorEnvelope`
+
+---
+
+## 6. 入口规范
+
+### 6.1 stdio（src/index.ts）
+
+- 创建 `McpServer({ name, version })`
+- 调用 `registerAllTools(server)`
+- 通过 `StdioServerTransport` 连接
+- 启动日志包含工具数量
+
+### 6.2 HTTP（src/http.ts）
+
+路由规范：
+
+- `GET /healthz`
+  - 返回 `{ status: 'ok', tools: ENDPOINTS.length, retrieved_at }`
+- `GET /proxy/*`
+  - 将 `/proxy/...` 转为 upstream path
+  - 使用 `matchEndpointByResolvedPath` 进行 endpoint 匹配
+  - 合并 pathInput + queryInput 后执行 `executeEndpoint`
+- `/proxy/*` 非 GET → 405
+- 未知 proxy 路径 → 404，并返回可用 endpoint 列表
+- 其他路由 → 404
+
+---
+
+## 7. package.json 脚本要求（必须具备）
+
+```json
+{
+  "scripts": {
+    "build": "tsup src/index.ts src/http.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "pnpm run typecheck",
+    "test": "vitest run",
+    "dev": "tsx src/index.ts",
+    "start:http": "node dist/http.js",
+    "inspect:local": "pnpm run build && npx -y @modelcontextprotocol/inspector node ./dist/index.js",
+    "inspect:npm": "npx -y @modelcontextprotocol/inspector npx -y @darkhorseone/mcp-server-uk-parliament-members"
+  }
+}
+```
+
+---
+
+## 8. 测试规范（最小覆盖）
+
+### 8.1 endpoints.generated.test.ts
+
+- endpoint 数量与 swagger 一致（本例 43）
+- `toolName` 唯一
+- `path` 唯一
+
+### 8.2 http.proxy.test.ts
+
+- path 参数 + query 参数拼接正确
+- array query 生成重复键（如 `ids=1&ids=2`）
+- required 参数缺失时报错
+
+### 8.3 tools.generated.test.ts
+
+- 注册工具数量等于 endpoint 数
+- upstream timeout 映射到 `UPSTREAM_TIMEOUT` + 504
+- 参数 `description` 与 `enum` 能出现在工具 input schema 元信息
+
+---
+
+## 9. README 要求（package 内独立 README）
+
+`servers/<slug>/README.md` 至少包含：
+
+- 包名与用途
+- 环境变量
+- 安装、构建、运行（stdio/http）
+- healthz 与 proxy 示例
+- Inspector 使用方式
+- 包级 test/typecheck/build 命令
+
+---
+
+## 10. 交付验收（DoD）
+
+以下全部满足才算完成：
+
+1. 从 swagger `paths[*].get` 全量生成 endpoints（本例 43）。
+2. stdio 默认可启动，tools 可列出并可调用。
+3. HTTP `/healthz` 与 `/proxy/*` 行为符合规范。
+4. `endpoints.generated.ts` 参数包含 `description`（swagger 有则必须写入）。
+5. `tools.generated.ts` 将参数 `description/enum` 反映到 inputSchema 元信息。
+6. 三组测试全部通过。
+7. `typecheck` 与 `build` 通过。
+8. package 内存在独立 README。
+
+---
+
+## 11. 执行命令（最终必须跑）
+
+在仓库根目录执行：
 
 ```bash
-mkdir -p "${PACKAGE_DIR}/src"
-mkdir -p "${PACKAGE_DIR}/test"
+pnpm --filter @darkhorseone/mcp-server-uk-parliament-members run test
+pnpm --filter @darkhorseone/mcp-server-uk-parliament-members run typecheck
+pnpm --filter @darkhorseone/mcp-server-uk-parliament-members run build
 ```
 
-在 `${PACKAGE_DIR}` 下创建并完善以下文件（可由 Codex直接写入）：
-
-- `package.json`（name 必须等于 `${PACKAGE_NAME}`）
-- `tsconfig.json`
-- `src/index.ts`（stdio MCP 默认入口）
-- `src/http.ts`（HTTP 转发入口）
-- `src/endpoints.generated.ts`（由 swagger 生成或静态产物化）
-- `src/tools.generated.ts`（43 endpoints 对应 MCP tools）
-- `test/*.test.ts`（至少覆盖 endpoints 注册、参数透传、错误映射）
-
-### 0.3 Codex 端到端执行顺序（必须按序完成）
-
-1. 读取 `docs/impl/uk-parliament-members/swagger.json`，提取全部 endpoints（43 个）；
-2. 生成 endpoint registry（path、method、path params、query params、required）；
-3. 生成 stdio MCP tools（一 endpoint 一 tool，全部可调用）；
-4. 实现 HTTP proxy server（同一 registry 驱动，完成转发）；
-5. 增加本地 Inspector 调试脚本（dist + npm 发布包）；
-6. 运行 `pnpm run check`，修复问题直到通过；
-7. 对照本文“验收标准”逐项自检，全部满足后结束。
-
-### 0.4 产出定义（DoD）
-
-只要出现以下任一项未满足，任务视为未完成：
-
-- 43 个 endpoint 有遗漏；
-- stdio 不是默认可运行入口；
-- HTTP 未实现完整转发；
-- package 命名不符合规则；
-- Inspector 命令不可直接执行。
-
-## 1. 目标（仅两件事，必须同时实现）
-
-本 MCP Server 必须完成以下两项能力：
-
-1. **stdio MCP 能力（默认）**  
-   将 `swagger.json` 中描述的 **全部 API endpoints（43 个）** 转化为本地可调用的 MCP tools（通过 stdio 协议提供）。
-
-2. **HTTP 包装与转发能力（扩展）**  
-   基于同一份 endpoint 元数据，提供一个简单 HTTP server，完成对上游 UK Parliament API 的包装与转发，使 unla 等中间件可通过 HTTP 协议配置并提供 MCP server 能力。
-
 ---
 
-## 2. 命名与协议约束
-
-### 2.1 Package 命名规则
-
-统一规则：`@darkhorseone/mcp-server-<路径名>`  
-本项目路径名：`uk-parliament-members`  
-故 package 名称必须为：
-
-`@darkhorseone/mcp-server-uk-parliament-members`
-
-### 2.2 传输协议
-
-- **默认协议**：`stdio`（必须可直接运行）
-- **扩展协议**：`http`（提供 HTTP 转发层，供 unla 等工具接入）
-
----
-
-## 3. 输入文档与上游
-
-- Swagger 输入：`docs/impl/uk-parliament-members/swagger.json`
-- OpenAPI 版本：`3.0.4`
-- 上游基地址：`https://members-api.parliament.uk`
-
-说明：
-
-- 路径定义以 swagger 为唯一真值来源；
-- 本地服务只做协议转换、参数透传（带必要校验）与响应标准化，不改变上游业务语义。
-
----
-
-## 4. 全量 Endpoint 覆盖清单（43）
-
-以下 endpoints 必须全部支持（均为 `GET`）：
-
-1. `/api/Location/Browse/{locationType}/{locationName}`
-2. `/api/Location/Constituency/Search`
-3. `/api/Location/Constituency/{id}`
-4. `/api/Location/Constituency/{id}/Synopsis`
-5. `/api/Location/Constituency/{id}/Representations`
-6. `/api/Location/Constituency/{id}/Geometry`
-7. `/api/Location/Constituency/{id}/ElectionResults`
-8. `/api/Location/Constituency/{id}/ElectionResult/{electionId}`
-9. `/api/Location/Constituency/{id}/ElectionResult/Latest`
-10. `/api/LordsInterests/Register`
-11. `/api/LordsInterests/Staff`
-12. `/api/Members/Search`
-13. `/api/Members/SearchHistorical`
-14. `/api/Members/{id}`
-15. `/api/Members/{id}/Biography`
-16. `/api/Members/{id}/Contact`
-17. `/api/Members/{id}/ContributionSummary`
-18. `/api/Members/{id}/Edms`
-19. `/api/Members/{id}/Experience`
-20. `/api/Members/{id}/Focus`
-21. `/api/Members/History`
-22. `/api/Members/{id}/LatestElectionResult`
-23. `/api/Members/{id}/Portrait`
-24. `/api/Members/{id}/PortraitUrl`
-25. `/api/Members/{id}/RegisteredInterests`
-26. `/api/Members/{id}/Staff`
-27. `/api/Members/{id}/Synopsis`
-28. `/api/Members/{id}/Thumbnail`
-29. `/api/Members/{id}/ThumbnailUrl`
-30. `/api/Members/{id}/Voting`
-31. `/api/Members/{id}/WrittenQuestions`
-32. `/api/Parties/StateOfTheParties/{house}/{forDate}`
-33. `/api/Parties/LordsByType/{forDate}`
-34. `/api/Parties/GetActive/{house}`
-35. `/api/Posts/GovernmentPosts`
-36. `/api/Posts/OppositionPosts`
-37. `/api/Posts/Spokespersons`
-38. `/api/Posts/Departments/{type}`
-39. `/api/Posts/SpeakerAndDeputies/{forDate}`
-40. `/api/Reference/PolicyInterests`
-41. `/api/Reference/Departments`
-42. `/api/Reference/AnsweringBodies`
-43. `/api/Reference/Departments/{id}/Logo`
-
----
-
-## 5. stdio MCP 设计（全量工具化）
-
-### 5.1 工具生成原则
-
-基于 swagger path 自动生成 tool 定义（或在构建时产物化），每个 endpoint 对应一个 MCP tool：
-
-- tool 命名建议：
-  - `ukp_location_browse`
-  - `ukp_members_search`
-  - `ukp_members_get_by_id`
-  - `ukp_reference_departments_logo` 等
-- path 参数与 query 参数按 swagger 原始参数名映射；
-- 输入 schema 从 OpenAPI 参数定义派生，保留 required/optional 语义；
-- 输出统一为 JSON 对象，至少包含：
-  - `status`
-  - `data`（上游响应体）
-  - `upstream_path`
-  - `retrieved_at`
-
-### 5.2 stdio 默认启动
-
-- CLI 默认入口即 stdio server；
-- server 启动后注册全部 43 个 tools；
-- 对外行为遵循 MCP 标准请求/响应格式。
-
----
-
-## 6. HTTP 包装与转发设计
-
-### 6.1 目标
-
-HTTP server 用于“配置化转发 swagger endpoints”，使 unla 这类系统无需 stdio，即可通过 HTTP 方式对接同一能力集。
-
-### 6.2 转发行为
-
-- 路由建议：
-  - `GET /healthz`：健康检查
-  - `ALL /proxy/*`：统一转发入口（或按 endpoint 显式挂载 43 个路由）
-- 转发时：
-  - 校验 path/query 参数；
-  - 拼接上游 URL（`https://members-api.parliament.uk` + swagger path）；
-  - 透传 query；
-  - 返回标准 JSON 包装（含上游状态码和正文）。
-
-### 6.3 与 MCP 的关系
-
-- stdio 是主 MCP server；
-- HTTP 包装层可被中间件（如 unla）读取和配置，再由中间件以 HTTP 协议对外提供 MCP 能力；
-- 两者共享同一份 endpoint registry，确保能力一致。
-
----
-
-## 7. 运行与配置
-
-建议环境变量：
-
-- `UKP_API_BASE_URL`（默认 `https://members-api.parliament.uk`）
-- `UKP_HTTP_PORT`（默认 `8787`）
-- `UKP_REQUEST_TIMEOUT_MS`（默认 `10000`）
-
----
-
-## 8. 错误处理
-
-- 参数错误：`400` + 可读错误消息；
-- 上游超时：`504` 或统一 error 对象（实现需一致）；
-- 上游非 2xx：保留上游 status，并返回结构化错误；
-- 所有错误输出必须可被调用方稳定解析（字段固定）。
-
----
-
-## 9. 本地测试（MCP Inspector）
-
-使用官方工具：`npx @modelcontextprotocol/inspector`。
-
-### 9.1 package.json 脚本要求
-
-必须在 `package.json` 提供两类测试命令：
-
-1. **测试本地构建产物（dist）**
-   - 通过 Inspector 启动本地 dist server；
-   - 用于本地开发联调。
-
-2. **测试 npm registry 已发布包**
-   - 通过 Inspector 启动 `@darkhorseone/mcp-server-uk-parliament-members`；
-   - 用于验证已发布版本行为。
-
----
-
-## 10. 验收标准
-
-1. 覆盖 swagger 中全部 43 个 endpoints；
-2. stdio 模式可列出并调用全部对应 MCP tools；
-3. HTTP 模式可对全部 endpoints 完成转发；
-4. package 名称符合 `@darkhorseone/mcp-server-<路径名>` 规则；
-5. `package.json` 已提供 Inspector 的本地 dist 与 npm 包两套测试命令；
-6. 文档与实现在 endpoint 清单上保持一致（禁止遗漏）。
-
----
-
-## 11. 参考
+## 12. 参考输入
 
 - `docs/impl/uk-parliament-members/swagger.json`
 - `https://members-api.parliament.uk/api`

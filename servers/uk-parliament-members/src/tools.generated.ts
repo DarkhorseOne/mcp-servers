@@ -49,9 +49,48 @@ function schemaForType(type: ParameterType): z.ZodTypeAny {
   }
 }
 
+function enumSchemaForValues(values: Array<string | number | boolean>): z.ZodTypeAny {
+  const literals = values.map((value) => z.literal(value));
+  const [first, ...rest] = literals;
+
+  if (!first) {
+    return z.never();
+  }
+
+  if (rest.length === 0) {
+    return first;
+  }
+
+  const [second, ...remaining] = rest;
+  if (!second) {
+    return first;
+  }
+
+  return z.union([first, second, ...remaining]);
+}
+
+function schemaForParameter(parameter: {
+  type: ParameterType;
+  description?: string;
+  enum?: Array<string | number | boolean>;
+}): z.ZodTypeAny {
+  let schema = schemaForType(parameter.type);
+
+  if (parameter.enum && parameter.enum.length > 0) {
+    const enumSchema = enumSchemaForValues(parameter.enum);
+    schema = z.union([enumSchema, schema]);
+  }
+
+  if (parameter.description && parameter.description.length > 0) {
+    schema = schema.describe(parameter.description);
+  }
+
+  return schema;
+}
+
 function endpointInputSchema(endpoint: EndpointDefinition): z.ZodObject<z.ZodRawShape> {
   const entries = [...endpoint.pathParams, ...endpoint.queryParams].map((parameter) => {
-    const base = schemaForType(parameter.type);
+    const base = schemaForParameter(parameter);
     return [parameter.name, parameter.required ? base : base.optional()] as const;
   });
 
