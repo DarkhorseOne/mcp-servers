@@ -16,7 +16,9 @@
     "changeset": "changeset",
     "version:packages": "changeset version",
     "publish:packages": "pnpm publish -r --access public",
-    "create:server": "node ./scripts/create-server.mjs"
+    "create:server": "node ./scripts/create-server.mjs",
+    "inspect:ukpm:local": "npx @modelcontextprotocol/inspector node ./servers/uk-parliament-members/dist/index.js",
+    "inspect:ukpm:npm": "npx @modelcontextprotocol/inspector npx -y @darkhorseone/mcp-server-uk-parliament-members"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.7",
