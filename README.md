@@ -81,6 +81,18 @@ pnpm run version:packages
 pnpm run publish:packages
 ```
 
+### Generic npm publish commands
+
+Use these when publishing a single package directly:
+
+```bash
+# From the package directory
+npm publish --access public
+
+# Or from repo root (workspace filtered)
+pnpm --filter <workspace-package-name> publish --access public
+```
+
 ## License
 
 Copyright (c) DarkhorseOne Limited.
