@@ -12,9 +12,14 @@ The following MCP servers are currently implemented under `servers/`:
 | `uk-parliament-interests` | `@darkhorseone/mcp-server-uk-parliament-interests` | MCP server for UK Parliament Register of Interests API | `1.0.0` | ✅ Published `1.0.0` |
 | `uk-parliament-oralquestionsandmotions` | `@darkhorseone/mcp-server-uk-parliament-oralquestionsandmotions` | MCP server for UK Parliament Oral Questions and Motions API | `1.0.0` | ✅ Published `1.0.0` |
 | `uk-parliament-commonsvotes` | `@darkhorseone/mcp-server-uk-parliament-commonsvotes` | MCP server for UK Parliament Commons Votes API | `1.0.0` | ✅ Published `1.0.0` |
-| `uk-parliament-lordsvotes` | `@darkhorseone/mcp-server-uk-parliament-lordsvotes` | MCP server for UK Parliament Lords Votes API | `0.1.0` | ✅ Published `1.0.0` |
-| `uk-parliament-statutoryinstruments` | `@darkhorseone/mcp-server-uk-parliament-statutoryinstruments` | MCP server for UK Parliament Statutory Instruments API | `1.0.0` | ✅ Published `1.0.0` (an hour ago) |
-| `uk-parliament-treaties` | `@darkhorseone/mcp-server-uk-parliament-treaties` | MCP server for UK Parliament Treaties API | `1.0.0` | ✅ Published `1.0.0` (a few seconds ago) |
+| `uk-parliament-lordsvotes` | `@darkhorseone/mcp-server-uk-parliament-lordsvotes` | MCP server for UK Parliament Lords Votes API | `1.0.0` | ✅ Published `1.0.0` |
+| `uk-parliament-statutoryinstruments` | `@darkhorseone/mcp-server-uk-parliament-statutoryinstruments` | MCP server for UK Parliament Statutory Instruments API | `1.0.0` | ✅ Published `1.0.0` |
+| `uk-parliament-treaties` | `@darkhorseone/mcp-server-uk-parliament-treaties` | MCP server for UK Parliament Treaties API | `1.0.0` | ✅ Published `1.0.0` |
+| `uk-parliament-now` | `@darkhorseone/mcp-server-uk-parliament-now` | MCP server for UK Parliament NOW Annunciator Content API | `1.0.0` | ✅ Published `1.0.0` |
+| `uk-parliament-erskinemay` | `@darkhorseone/mcp-server-uk-parliament-erskinemay` | MCP server for UK Parliament Erskine May API | `1.0.0` | ✅ Published `1.0.0` |
+| `uk-parliament-bills` | `@darkhorseone/mcp-server-uk-parliament-bills` | MCP server for UK Parliament Bills API | `1.0.0` | ✅ Published `1.0.0` |
+| `uk-parliament-questions-statements` | `@darkhorseone/mcp-server-uk-parliament-questions-statements` | MCP server for UK Parliament Questions and Statements API | `1.0.0` | ✅ Published `1.0.0` |
+| `uk-parliament-committees` | `@darkhorseone/mcp-server-uk-parliament-committees` | MCP server for UK Parliament Committees API | `1.0.0` | ✅ Published `1.0.0` |
 
 ## Requirements
 
