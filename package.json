@@ -14,6 +14,7 @@
     "dev:gov-uk": "pnpm --filter @darkhorseone/mcp-server-gov-uk dev",
     "dev:companies-house": "pnpm --filter @darkhorseone/mcp-server-companies-house dev",
     "dev:uk-parliament-interests": "pnpm --filter @darkhorseone/mcp-server-uk-parliament-interests dev",
+    "dev:uk-parliament-commonsvotes": "pnpm --filter @darkhorseone/mcp-server-uk-parliament-commonsvotes dev",
     "changeset": "changeset",
     "version:packages": "changeset version",
     "publish:packages": "pnpm publish -r --access public",
