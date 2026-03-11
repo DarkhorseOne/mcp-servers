@@ -1,0 +1,48 @@
+{
+  "name": "@darkhorseone/mcp-server-uk-parliament-now",
+  "version": "1.0.0",
+  "description": "MCP server for UK Parliament NOW Annunciator Content API",
+  "license": "MIT",
+  "author": "DarkhorseOne Limited",
+  "homepage": "https://github.com/DarkhorseOne/mcp-servers",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DarkhorseOne/mcp-servers.git"
+  },
+  "type": "module",
+  "bin": {
+    "mcp-server-uk-parliament-now": "dist/index.js",
+    "mcp-server-uk-parliament-now-http": "dist/http.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/http.ts --format esm --dts --clean",
+    "check:tarball:shebang": "pnpm run build && node ./scripts/add-shebang.mjs && node ./scripts/verify-tarball-shebang.mjs",
+    "prepack": "pnpm run build && pnpm run check:tarball:shebang",
+    "prepublishOnly": "pnpm run check:tarball:shebang",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "pnpm run typecheck",
+    "test": "vitest run",
+    "dev": "tsx src/index.ts",
+    "dev:http": "tsx src/http.ts",
+    "start:http": "node dist/http.js",
+    "check": "pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build",
+    "inspect:local": "pnpm run build && npx -y @modelcontextprotocol/inspector node ./dist/index.js",
+    "inspect:npm": "npx -y @modelcontextprotocol/inspector npx -y -p @darkhorseone/mcp-server-uk-parliament-now mcp-server-uk-parliament-now"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "tsup": "^8.3.5",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
