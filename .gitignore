@@ -48,3 +48,7 @@ Thumbs.db
 # Misc
 *.pem
 *.key
+
+# mcp-publisher
+.mcpregistry_github_token
+.mcpregistry_registry_token
