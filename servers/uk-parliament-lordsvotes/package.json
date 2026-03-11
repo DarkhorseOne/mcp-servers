@@ -1,6 +1,6 @@
 {
   "name": "@darkhorseone/mcp-server-uk-parliament-lordsvotes",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "MCP server for UK Parliament Lords Votes API",
   "license": "MIT",
   "author": "DarkhorseOne Limited",
