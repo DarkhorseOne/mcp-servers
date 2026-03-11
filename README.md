@@ -8,11 +8,13 @@ The following MCP servers are currently implemented under `servers/`:
 
 | Server slug | npm package | Description | Local version | npm published status |
 | --- | --- | --- | --- | --- |
-| `uk-parliament-members` | `@darkhorseone/mcp-server-uk-parliament-members` | MCP server for UK Parliament Members API | `1.0.1` | ✅ Published `1.0.1`|
+| `uk-parliament-members` | `@darkhorseone/mcp-server-uk-parliament-members` | MCP server for UK Parliament Members API | `1.0.1` | ✅ Published `1.0.1` |
 | `uk-parliament-interests` | `@darkhorseone/mcp-server-uk-parliament-interests` | MCP server for UK Parliament Register of Interests API | `1.0.0` | ✅ Published `1.0.0` |
-| `uk-parliament-oralquestionsandmotions` | `@darkhorseone/mcp-server-uk-parliament-oralquestionsandmotions` | MCP server for UK Parliament Oral Questions and Motions API | `1.0.0` | ✅ Published `1.0.0`  |
+| `uk-parliament-oralquestionsandmotions` | `@darkhorseone/mcp-server-uk-parliament-oralquestionsandmotions` | MCP server for UK Parliament Oral Questions and Motions API | `1.0.0` | ✅ Published `1.0.0` |
 | `uk-parliament-commonsvotes` | `@darkhorseone/mcp-server-uk-parliament-commonsvotes` | MCP server for UK Parliament Commons Votes API | `1.0.0` | ✅ Published `1.0.0` |
 | `uk-parliament-lordsvotes` | `@darkhorseone/mcp-server-uk-parliament-lordsvotes` | MCP server for UK Parliament Lords Votes API | `0.1.0` | ✅ Published `1.0.0` |
+| `uk-parliament-statutoryinstruments` | `@darkhorseone/mcp-server-uk-parliament-statutoryinstruments` | MCP server for UK Parliament Statutory Instruments API | `1.0.0` | ✅ Published `1.0.0` (an hour ago) |
+| `uk-parliament-treaties` | `@darkhorseone/mcp-server-uk-parliament-treaties` | MCP server for UK Parliament Treaties API | `1.0.0` | ✅ Published `1.0.0` (a few seconds ago) |
 
 ## Requirements
 
