@@ -65,6 +65,7 @@ Example Usage
 Use Cases  
 Data Source  
 Installation  
+Run (HTTP proxy server)
 License  
 MCP Metadata  
 

@@ -93,6 +93,7 @@ Every MCP server README must contain the following sections.
 ## Use Cases
 ## Data Source
 ## Installation
+## Run (HTTP proxy server)
 ## License
 ## MCP Metadata
 
@@ -293,6 +294,18 @@ or
 
 npm install  
 npm run start
+
+---
+
+## Run (HTTP proxy server)
+copy current exist contents from README.md
+
+Include an HTTP port environment variable example using `UKP_HTTP_PORT` (default varies by server).
+Example:
+
+```bash
+UKP_HTTP_PORT=8787 pnpm --filter <workspace-package-name> run start:http
+```
 
 ---
 

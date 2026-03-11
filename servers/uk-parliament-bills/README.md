@@ -1,90 +1,263 @@
-# @darkhorseone/mcp-server-uk-parliament-bills
+![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-blue)
+![AI Agent Ready](https://img.shields.io/badge/AI-Agent%20Ready-green)
 
-MCP server package for the UK Parliament Bills API.
+# UK Parliament Bills MCP Server
 
-- Source API (official): https://bills-api.parliament.uk
+# Summary
+This MCP server provides structured access to UK Parliament Bills data using the Model Context Protocol.
+It enables AI agents to query bills, stages, publications, amendments, and RSS feeds through reliable tools and an API-backed data source.
+Developers can integrate the MCP server into local workflows or automation pipelines using stdio transport, while preserving upstream API responses.
+The server exposes tools for search, lookup, and publication retrieval, optimized for AI agents and MCP-compatible clients.
 
-This package provides:
+## Features
+- Search and retrieve Bills, stages, publications, and sittings from the UK Parliament Bills API.
+- Access amendments and ping-pong items with structured parameters and enum validation.
+- Provide RSS feeds for all, public, or private bills as raw text payloads.
+- Preserve upstream JSON payloads in a consistent response envelope for downstream tools and AI agents.
 
-- a **stdio MCP server** entrypoint (for MCP clients), and
-- an optional **HTTP proxy server** entrypoint (for local/ops-style access).
+## Available Tools
+### search_bill_stage_amendments
+Returns a list of amendments for a Bill stage.
 
-## Package
+Parameters:
+- billId (number, path) – Bill ID.
+- billStageId (number, path) – Bill stage ID.
+- SearchTerm (string, query) – Optional text search.
+- AmendmentNumber (string, query) – Optional amendment number.
+- Decision (string, query) – Optional decision enum.
+- MemberId (number, query) – Optional member ID.
+- Skip (number, query) – Optional offset.
+- Take (number, query) – Optional limit.
 
-- Name: `@darkhorseone/mcp-server-uk-parliament-bills`
-- Version: `1.0.0`
-- Runtime: Node.js (ESM)
+### get_bill_stage_amendment
+Returns a specific amendment for a Bill stage.
 
-## What it exposes
+Parameters:
+- billId (number, path) – Bill ID.
+- billStageId (number, path) – Bill stage ID.
+- amendmentId (number, path) – Amendment ID.
 
-Tools generated from Bills API endpoints (`GET` only):
+### list_bill_news_articles
+Returns news articles for a Bill.
 
-1. `search_bill_stage_amendments`
-2. `get_bill_stage_amendment`
-3. `list_bill_news_articles`
-4. `list_bill_types`
-5. `search_bills`
-6. `get_bill`
-7. `get_bill_stage_details`
-8. `list_bill_stages`
-9. `get_publication_document`
-10. `download_publication_document`
-11. `search_bill_stage_ping_pong_items`
-12. `get_bill_stage_ping_pong_item`
-13. `list_publication_types`
-14. `list_bill_publications`
-15. `list_bill_stage_publications`
-16. `get_rss_all_bills`
-17. `get_rss_public_bills`
-18. `get_rss_private_bills`
-19. `get_rss_bill_by_id`
-20. `search_sittings`
-21. `list_stage_references`
+Parameters:
+- billId (number, path) – Bill ID.
+- Skip (number, query) – Optional offset.
+- Take (number, query) – Optional limit.
 
-## Environment variables
+### list_bill_types
+Returns a list of Bill types.
 
-- `UPSTREAM_BASE_URL` (default: `https://bills-api.parliament.uk`)
-- `REQUEST_TIMEOUT_MS` (default: `10000`)
-- `UKP_HTTP_PORT` (HTTP mode only, default: `3000`)
+Parameters:
+- Category (string, query) – Optional category enum.
+- Skip (number, query) – Optional offset.
+- Take (number, query) – Optional limit.
 
-## Install
+### search_bills
+Returns a list of Bills matching filters.
 
-From repository root:
+Parameters:
+- SearchTerm (string, query) – Optional text search.
+- Session (number, query) – Optional session number.
+- CurrentHouse (string, query) – Optional house enum.
+- OriginatingHouse (string, query) – Optional house enum.
+- MemberId (number, query) – Optional member ID.
+- DepartmentId (number, query) – Optional department ID.
+- BillStage (array:number, query) – Optional bill stage IDs.
+- BillStagesExcluded (array:number, query) – Optional excluded stage IDs.
+- IsDefeated (boolean, query) – Optional defeated filter.
+- IsWithdrawn (boolean, query) – Optional withdrawn filter.
+- BillType (array:number, query) – Optional bill type IDs.
+- SortOrder (string, query) – Optional sort order enum.
+- BillIds (array:number, query) – Optional bill IDs.
+- IsInAmendableStage (boolean, query) – Optional amendable stage filter.
+- Skip (number, query) – Optional offset.
+- Take (number, query) – Optional limit.
 
-```bash
-pnpm install
+### get_bill
+Returns a Bill.
+
+Parameters:
+- billId (number, path) – Bill ID.
+
+### get_bill_stage_details
+Returns a Bill stage.
+
+Parameters:
+- billId (number, path) – Bill ID.
+- billStageId (number, path) – Bill stage ID.
+
+### list_bill_stages
+Returns all Bill stages for a Bill.
+
+Parameters:
+- billId (number, path) – Bill ID.
+- Skip (number, query) – Optional offset.
+- Take (number, query) – Optional limit.
+
+### get_publication_document
+Returns information on a publication document.
+
+Parameters:
+- publicationId (number, path) – Publication ID.
+- documentId (number, path) – Document ID.
+
+### download_publication_document
+Returns a publication document payload.
+
+Parameters:
+- publicationId (number, path) – Publication ID.
+- documentId (number, path) – Document ID.
+
+### search_bill_stage_ping_pong_items
+Returns a list of motions or amendments for a Bill stage.
+
+Parameters:
+- billId (number, path) – Bill ID.
+- billStageId (number, path) – Bill stage ID.
+- SearchTerm (string, query) – Optional text search.
+- AmendmentNumber (string, query) – Optional amendment number.
+- Decision (string, query) – Optional decision enum.
+- MemberId (number, query) – Optional member ID.
+- Skip (number, query) – Optional offset.
+- Take (number, query) – Optional limit.
+
+### get_bill_stage_ping_pong_item
+Returns an amendment or motion detail.
+
+Parameters:
+- billId (number, path) – Bill ID.
+- billStageId (number, path) – Bill stage ID.
+- pingPongItemId (number, path) – Ping pong item ID.
+
+### list_publication_types
+Returns a list of publication types.
+
+Parameters:
+- Skip (number, query) – Optional offset.
+- Take (number, query) – Optional limit.
+
+### list_bill_publications
+Returns Bill publications.
+
+Parameters:
+- billId (number, path) – Bill ID.
+
+### list_bill_stage_publications
+Returns publications for a Bill stage.
+
+Parameters:
+- billId (number, path) – Bill ID.
+- stageId (number, path) – Stage ID.
+
+### get_rss_all_bills
+Returns an RSS feed for all Bills.
+
+### get_rss_public_bills
+Returns an RSS feed for public Bills.
+
+### get_rss_private_bills
+Returns an RSS feed for private Bills.
+
+### get_rss_bill_by_id
+Returns an RSS feed for a specific Bill.
+
+Parameters:
+- id (number, path) – Bill ID.
+
+### search_sittings
+Returns a list of sittings.
+
+Parameters:
+- House (string, query) – Optional house enum.
+- DateFrom (string, query) – Optional start date.
+- DateTo (string, query) – Optional end date.
+- Skip (number, query) – Optional offset.
+- Take (number, query) – Optional limit.
+
+### list_stage_references
+Returns a list of Bill stages.
+
+Parameters:
+- Skip (number, query) – Optional offset.
+- Take (number, query) – Optional limit.
+
+## Example Output
+```json
+{
+  "status": 200,
+  "data": {
+    "items": [
+      {
+        "billId": 1,
+        "title": "Energy Security Bill",
+        "currentStage": "Commons Committee",
+        "currentHouse": "Commons",
+        "lastUpdated": "2026-03-11T10:00:00Z"
+      }
+    ],
+    "totalResults": 1
+  },
+  "upstream_path": "/api/v1/Bills",
+  "retrieved_at": "2026-03-11T10:00:00.000Z"
+}
 ```
 
-## Build
-
-From repository root:
-
-```bash
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-bills run build
-```
-
-## Run (stdio MCP server)
-
-Development mode:
-
-```bash
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-bills run dev
-```
-
-Built mode:
-
-```bash
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-bills exec node dist/index.js
-```
-
-Published package command:
+## Quick Start
+Run the MCP server using npx:
 
 ```bash
 npx -y -p @darkhorseone/mcp-server-uk-parliament-bills mcp-server-uk-parliament-bills
 ```
 
-## Run (HTTP proxy server)
+## MCP Configuration
+Example `mcpServers` configuration for stdio transport:
 
+```json
+{
+  "mcpServers": {
+    "uk-parliament-bills": {
+      "command": "npx",
+      "args": ["-y", "-p", "@darkhorseone/mcp-server-uk-parliament-bills", "mcp-server-uk-parliament-bills"],
+      "env": {
+        "UPSTREAM_BASE_URL": "https://bills-api.parliament.uk",
+        "REQUEST_TIMEOUT_MS": "10000"
+      }
+    }
+  }
+}
+```
+
+## Example Usage
+- List the latest UK Parliament Bills.
+- Fetch a specific Bill by ID and return the current stage.
+- Retrieve publications for a Bill and download a document.
+- Get the RSS feed for public Bills for downstream tools.
+
+## Use Cases
+- AI agents summarizing legislative progress and bill status.
+- Developer tools that monitor bill updates via the API and RSS.
+- Civic technology platforms tracking amendments and parliamentary stages.
+- Automation workflows that enrich datasets with UK Parliament Bills metadata.
+
+## Data Source
+UK Parliament Bills API
+https://bills-api.parliament.uk
+
+## Installation
+Run directly using npx:
+
+```bash
+npx -y -p @darkhorseone/mcp-server-uk-parliament-bills mcp-server-uk-parliament-bills
+```
+
+Or install via pnpm from the repository root:
+
+```bash
+pnpm install
+```
+
+## Run (HTTP proxy server)
 Build first, then start:
 
 ```bash
@@ -92,10 +265,22 @@ pnpm --filter @darkhorseone/mcp-server-uk-parliament-bills run build
 pnpm --filter @darkhorseone/mcp-server-uk-parliament-bills run start:http
 ```
 
+Set a custom HTTP port with the `UKP_HTTP_PORT` environment variable (default: `3000`):
+
+```bash
+UKP_HTTP_PORT=8787 pnpm --filter @darkhorseone/mcp-server-uk-parliament-bills run start:http
+```
+
 Published package command:
 
 ```bash
-npx -y -p @darkhorseone/mcp-server-uk-parliament-bills mcp-server-uk-parliament-bills-http
+npx -y -p @darkhorseone/mcp-server-uk-parliament-bills -- mcp-server-uk-parliament-bills-http
+```
+
+If your shell cannot resolve the bin ("command not found"), run the HTTP entrypoint directly:
+
+```bash
+npx -y -p @darkhorseone/mcp-server-uk-parliament-bills -- node ./dist/http.js
 ```
 
 Health check:
@@ -110,69 +295,16 @@ Proxy pattern:
 GET /proxy/<upstream-path>?<query>
 ```
 
-Examples:
+Example:
 
 ```bash
-curl "http://127.0.0.1:3000/proxy/api/v1/Bills/1"
 curl "http://127.0.0.1:3000/proxy/api/v1/Bills?SearchTerm=energy&SortOrder=TitleAscending"
-curl "http://127.0.0.1:3000/proxy/api/v1/Rss/Bills/5.rss"
 ```
 
-## Inspect with MCP Inspector
+## License
+MIT License
 
-Local build:
-
-```bash
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-bills run inspect:local
-```
-
-Published package:
-
-```bash
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-bills run inspect:npm
-```
-
-## Quality checks
-
-Run package-scoped checks from repository root:
-
-```bash
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-bills run test
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-bills run typecheck
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-bills run build
-```
-
-## Compatibility note on response models
-
-The source swagger includes extensive response schemas. This package does not force endpoint-specific response deserialization.
-
-Compatibility strategy in this package:
-
-- request/parameter mapping strictly follows `paths` definitions,
-- enum constraints are enforced for filter parameters (Decision/House/SortOrder, etc.),
-- upstream JSON payload is preserved in `data` as returned by API,
-- RSS endpoints return raw text in `data`.
-
-## Error envelope example
-
-```json
-{
-  "status": 504,
-  "error": {
-    "code": "UPSTREAM_TIMEOUT",
-    "message": "Upstream timeout",
-    "details": {
-      "code": "UPSTREAM_TIMEOUT",
-      "timeoutMs": 10000
-    }
-  },
-  "upstream_path": "/api/v1/Bills",
-  "retrieved_at": "2026-03-11T10:00:00.000Z"
-}
-```
-
-## Package metadata
-
-- License: MIT
-- Repository: https://github.com/DarkhorseOne/mcp-servers
-- Author: DarkhorseOne Limited
+## MCP Metadata
+Protocol: Model Context Protocol
+Transport: stdio
+Tools: search_bill_stage_amendments, get_bill_stage_amendment, list_bill_news_articles, list_bill_types, search_bills, get_bill, get_bill_stage_details, list_bill_stages, get_publication_document, download_publication_document, search_bill_stage_ping_pong_items, get_bill_stage_ping_pong_item, list_publication_types, list_bill_publications, list_bill_stage_publications, get_rss_all_bills, get_rss_public_bills, get_rss_private_bills, get_rss_bill_by_id, search_sittings, list_stage_references
