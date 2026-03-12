@@ -1,71 +1,102 @@
-# @darkhorseone/mcp-server-uk-parliament-now
+![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-blue)
+![AI Agent Ready](https://img.shields.io/badge/AI-Agent%20Ready-green)
 
-MCP server package for the UK Parliament NOW Annunciator Content API.
+# UK Parliament NOW Annunciator MCP Server
 
-- Source API (official): https://now-api.parliament.uk
+# Summary
+This MCP server provides structured access to UK Parliament NOW Annunciator data using the Model Context Protocol.
+It enables AI agents to retrieve current and historical annunciator messages through API-backed tools and data access.
+Developers can integrate the MCP server via stdio transport to query message feeds for Commons and Lords.
+The server exposes tools that map directly to the NOW Annunciator API for automation and AI agents workflows.
 
-This package provides:
+## Features
+- Retrieve the current annunciator message for Commons or Lords.
+- Fetch the latest message after a specific date and time.
+- Enforce annunciator enum constraints for reliable queries.
+- Preserve upstream payloads in a standardized envelope for downstream tools.
 
-- a **stdio MCP server** entrypoint (for MCP clients), and
-- an optional **HTTP proxy server** entrypoint (for local/ops-style access).
+## Available Tools
+### get_current_message_by_annunciator
+Return the current message by annunciator type.
 
-## Package
+Parameters:
+- annunciator (string, path) – CommonsMain | LordsMain.
 
-- Name: `@darkhorseone/mcp-server-uk-parliament-now`
-- Version: `1.0.0`
-- Runtime: Node.js (ESM)
+### get_latest_message_by_annunciator_and_date
+Return the most recent message by annunciator after date time specified.
 
-## What it exposes
+Parameters:
+- annunciator (string, path) – CommonsMain | LordsMain.
+- date (string, path) – ISO date-time string.
 
-Tools generated from NOW API endpoints (`GET` only):
-
-1. `get_current_message_by_annunciator`
-2. `get_latest_message_by_annunciator_and_date`
-
-## Environment variables
-
-- `UPSTREAM_BASE_URL` (default: `https://now-api.parliament.uk`)
-- `REQUEST_TIMEOUT_MS` (default: `10000`)
-- `UKP_HTTP_PORT` (HTTP mode only, default: `3000`)
-
-## Install
-
-From repository root:
-
-```bash
-pnpm install
+## Example Output
+```json
+{
+  "status": 200,
+  "data": {
+    "annunciator": "CommonsMain",
+    "message": "The House is sitting",
+    "timestamp": "2026-03-11T09:00:00Z"
+  },
+  "upstream_path": "/api/Message/message/CommonsMain/current",
+  "retrieved_at": "2026-03-11T10:00:00.000Z"
+}
 ```
 
-## Build
-
-From repository root:
-
-```bash
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-now run build
-```
-
-## Run (stdio MCP server)
-
-Development mode:
-
-```bash
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-now run dev
-```
-
-Built mode:
-
-```bash
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-now exec node dist/index.js
-```
-
-Published package command:
+## Quick Start
+Run the MCP server using npx:
 
 ```bash
 npx -y -p @darkhorseone/mcp-server-uk-parliament-now mcp-server-uk-parliament-now
 ```
 
-## Run (HTTP proxy server)
+## MCP Configuration
+Example `mcpServers` configuration for stdio transport:
 
+```json
+{
+  "mcpServers": {
+    "uk-parliament-now": {
+      "command": "npx",
+      "args": ["-y", "-p", "@darkhorseone/mcp-server-uk-parliament-now", "mcp-server-uk-parliament-now"],
+      "env": {
+        "UPSTREAM_BASE_URL": "https://now-api.parliament.uk",
+        "REQUEST_TIMEOUT_MS": "10000"
+      }
+    }
+  }
+}
+```
+
+## Example Usage
+- Retrieve the current Commons annunciator message.
+- Fetch the latest Lords message after a given timestamp.
+- Monitor annunciator updates for session status changes.
+
+## Use Cases
+- AI agents reporting live parliamentary status updates.
+- Monitoring dashboards showing Commons/Lords session messages.
+- Civic tech tools tracking sittings and announcements.
+- Automation workflows that trigger on annunciator updates.
+
+## Data Source
+UK Parliament NOW Annunciator Content API
+https://now-api.parliament.uk
+
+## Installation
+Run directly using npx:
+
+```bash
+npx -y -p @darkhorseone/mcp-server-uk-parliament-now mcp-server-uk-parliament-now
+```
+
+Or install via pnpm from the repository root:
+
+```bash
+pnpm install
+```
+
+## Run (HTTP proxy server)
 Build first, then start:
 
 ```bash
@@ -73,10 +104,22 @@ pnpm --filter @darkhorseone/mcp-server-uk-parliament-now run build
 pnpm --filter @darkhorseone/mcp-server-uk-parliament-now run start:http
 ```
 
+Set a custom HTTP port with the `UKP_HTTP_PORT` environment variable (default: `3000`):
+
+```bash
+UKP_HTTP_PORT=3000 pnpm --filter @darkhorseone/mcp-server-uk-parliament-now run start:http
+```
+
 Published package command:
 
 ```bash
-npx -y -p @darkhorseone/mcp-server-uk-parliament-now mcp-server-uk-parliament-now-http
+npx -y -p @darkhorseone/mcp-server-uk-parliament-now -- mcp-server-uk-parliament-now-http
+```
+
+If your shell cannot resolve the bin ("command not found"), run the HTTP entrypoint directly:
+
+```bash
+npx -y -p @darkhorseone/mcp-server-uk-parliament-now -- node ./dist/http.js
 ```
 
 Health check:
@@ -91,67 +134,16 @@ Proxy pattern:
 GET /proxy/<upstream-path>?<query>
 ```
 
-Examples:
+Example:
 
 ```bash
 curl "http://127.0.0.1:3000/proxy/api/Message/message/CommonsMain/current"
-curl "http://127.0.0.1:3000/proxy/api/Message/message/LordsMain/2025-01-01T00:00:00Z"
 ```
 
-## Inspect with MCP Inspector
+## License
+MIT License
 
-Local build:
-
-```bash
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-now run inspect:local
-```
-
-Published package:
-
-```bash
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-now run inspect:npm
-```
-
-## Quality checks
-
-Run package-scoped checks from repository root:
-
-```bash
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-now run test
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-now run typecheck
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-now run build
-```
-
-## Compatibility note on response models
-
-The source swagger has nested object/enum response models. This package does not force endpoint-specific response deserialization.
-
-Compatibility strategy in this package:
-
-- request/parameter mapping strictly follows `paths` definitions,
-- enum constraints are enforced for `annunciator` (`CommonsMain`, `LordsMain`),
-- upstream JSON payload is preserved in `data` as returned by API.
-
-## Error envelope example
-
-```json
-{
-  "status": 504,
-  "error": {
-    "code": "UPSTREAM_TIMEOUT",
-    "message": "Upstream timeout",
-    "details": {
-      "code": "UPSTREAM_TIMEOUT",
-      "timeoutMs": 10000
-    }
-  },
-  "upstream_path": "/api/Message/message/CommonsMain/current",
-  "retrieved_at": "2026-03-11T10:00:00.000Z"
-}
-```
-
-## Package metadata
-
-- License: MIT
-- Repository: https://github.com/DarkhorseOne/mcp-servers
-- Author: DarkhorseOne Limited
+## MCP Metadata
+Protocol: Model Context Protocol
+Transport: stdio
+Tools: get_current_message_by_annunciator, get_latest_message_by_annunciator_and_date
