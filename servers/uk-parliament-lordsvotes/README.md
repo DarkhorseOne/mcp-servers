@@ -1,81 +1,190 @@
-# @darkhorseone/mcp-server-uk-parliament-lordsvotes
+![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-blue)
+![AI Agent Ready](https://img.shields.io/badge/AI-Agent%20Ready-green)
 
-MCP server package for the UK Parliament Lords Votes API.
+# UK Parliament Lords Votes MCP Server
 
-- Source API (official): https://lordsvotes-api.parliament.uk/
+# Summary
+This MCP server provides structured access to UK Parliament Lords Votes data using the Model Context Protocol.
+It enables AI agents to retrieve divisions and voting records through API-backed tools for reliable data access and analysis.
+Developers can integrate the MCP server via stdio transport to query divisions, member voting history, and grouped vote summaries.
+The server exposes tools that map directly to the Lords Votes API for consistent automation and AI agents workflows.
 
-This package provides:
-- a **stdio MCP server** entrypoint (for MCP clients), and
-- an optional **HTTP proxy server** entrypoint (for local/ops-style access).
+## Features
+- Fetch a Lords division by division id with standardized responses.
+- Search divisions with filters for members, dates, and vote metrics.
+- Retrieve member voting records with paging controls.
+- Access divisions grouped by party for summary analysis.
 
-## Package
+## Available Tools
+### get_division_by_id
+Get a single Division which has the Id specified.
 
-- Name: `@darkhorseone/mcp-server-uk-parliament-lordsvotes`
-- Version: `0.1.0`
-- Runtime: Node.js (ESM)
+Parameters:
+- divisionId (number, path) – Division id.
 
-## Environment variables
+### search_divisions_total_results
+Get total count of Divisions meeting the specified query.
 
-- `UPSTREAM_BASE_URL` (default: `https://lordsvotes-api.parliament.uk`)
-- `UPSTREAM_TIMEOUT_MS` (default: `10000`)
-- `USER_AGENT` (default: `@darkhorseone/mcp-server-uk-parliament-lordsvotes/0.1.0`)
-- `UKPLV_HTTP_PORT` (HTTP mode only, default: `8787`)
+Parameters:
+- searchTerm (string, query)
+- memberId (number, query)
+- includeWhenMemberWasTeller (boolean, query)
+- startDate (string, query)
+- endDate (string, query)
+- divisionNumber (number, query)
+- totalVotesCastComparator (string, query) – LessThan | LessThanOrEqualTo | EqualTo | GreaterThanOrEqualTo | GreaterThan
+- totalVotesCastValueToCompare (number, query)
+- majorityComparator (string, query) – LessThan | LessThanOrEqualTo | EqualTo | GreaterThanOrEqualTo | GreaterThan
+- majorityValueToCompare (number, query)
 
-## Tools
+### search_divisions
+Get a list of Divisions which meet the specified criteria.
 
-1. `get_division_by_id`
-   - endpoint: `GET /data/Divisions/{divisionId}`
-   - required input: `divisionId: number`
-2. `search_divisions_total_results`
-   - endpoint: `GET /data/Divisions/searchTotalResults`
-3. `search_divisions`
-   - endpoint: `GET /data/Divisions/search`
-   - paging defaults: `skip=0`, `take=25`
-4. `get_member_voting_records`
-   - endpoint: `GET /data/Divisions/membervoting`
-   - required input: `memberId >= 1`
-   - paging defaults: `skip=0`, `take=25`
-5. `get_divisions_grouped_by_party`
-   - endpoint: `GET /data/Divisions/groupedbyparty`
+Parameters:
+- searchTerm (string, query)
+- memberId (number, query)
+- includeWhenMemberWasTeller (boolean, query)
+- startDate (string, query)
+- endDate (string, query)
+- divisionNumber (number, query)
+- totalVotesCastComparator (string, query) – LessThan | LessThanOrEqualTo | EqualTo | GreaterThanOrEqualTo | GreaterThan
+- totalVotesCastValueToCompare (number, query)
+- majorityComparator (string, query) – LessThan | LessThanOrEqualTo | EqualTo | GreaterThanOrEqualTo | GreaterThan
+- majorityValueToCompare (number, query)
+- skip (number, query) – Defaults to 0.
+- take (number, query) – Defaults to 25.
 
-Shared optional filters:
-- `searchTerm`
-- `memberId`
-- `includeWhenMemberWasTeller`
-- `startDate`
-- `endDate`
-- `divisionNumber`
-- `totalVotesCastComparator` (`LessThan | LessThanOrEqualTo | EqualTo | GreaterThanOrEqualTo | GreaterThan`)
-- `totalVotesCastValueToCompare`
-- `majorityComparator` (`LessThan | LessThanOrEqualTo | EqualTo | GreaterThanOrEqualTo | GreaterThan`)
-- `majorityValueToCompare`
+### get_member_voting_records
+Get a list of voting records for a Member.
 
-## Error codes
+Parameters:
+- memberId (number, query) – Required.
+- searchTerm (string, query)
+- includeWhenMemberWasTeller (boolean, query)
+- startDate (string, query)
+- endDate (string, query)
+- divisionNumber (number, query)
+- totalVotesCastComparator (string, query) – LessThan | LessThanOrEqualTo | EqualTo | GreaterThanOrEqualTo | GreaterThan
+- totalVotesCastValueToCompare (number, query)
+- majorityComparator (string, query) – LessThan | LessThanOrEqualTo | EqualTo | GreaterThanOrEqualTo | GreaterThan
+- majorityValueToCompare (number, query)
+- skip (number, query) – Defaults to 0.
+- take (number, query) – Defaults to 25.
 
-- `INVALID_ARGUMENT` (e.g. invalid input / upstream 400)
-- `NOT_FOUND` (upstream 404)
-- `UNAVAILABLE` (upstream 503)
-- `UPSTREAM_TIMEOUT` (timeout)
-- `UPSTREAM_NETWORK_ERROR` (network failure)
-- `UPSTREAM_ERROR` (other upstream failures)
+### get_divisions_grouped_by_party
+Get a list of Divisions which contain grouped by party.
 
-## Build
+Parameters:
+- searchTerm (string, query)
+- memberId (number, query)
+- includeWhenMemberWasTeller (boolean, query)
+- startDate (string, query)
+- endDate (string, query)
+- divisionNumber (number, query)
+- totalVotesCastComparator (string, query) – LessThan | LessThanOrEqualTo | EqualTo | GreaterThanOrEqualTo | GreaterThan
+- totalVotesCastValueToCompare (number, query)
+- majorityComparator (string, query) – LessThan | LessThanOrEqualTo | EqualTo | GreaterThanOrEqualTo | GreaterThan
+- majorityValueToCompare (number, query)
 
-```bash
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-lordsvotes run build
+## Example Output
+```json
+{
+  "ok": true,
+  "endpoint": "/data/Divisions/search",
+  "status": 200,
+  "data": {
+    "items": [
+      {
+        "divisionId": 456,
+        "divisionNumber": 22,
+        "title": "Education Bill - Second Reading",
+        "date": "2026-03-10"
+      }
+    ],
+    "totalResults": 1
+  }
+}
 ```
 
-## Run (stdio MCP server)
+## Quick Start
+Run the MCP server using npx:
 
 ```bash
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-lordsvotes run dev
+npx -y -p @darkhorseone/mcp-server-uk-parliament-lordsvotes mcp-server-uk-parliament-lordsvotes
+```
+
+## MCP Configuration
+Example `mcpServers` configuration for stdio transport:
+
+```json
+{
+  "mcpServers": {
+    "uk-parliament-lordsvotes": {
+      "command": "npx",
+      "args": ["-y", "-p", "@darkhorseone/mcp-server-uk-parliament-lordsvotes", "mcp-server-uk-parliament-lordsvotes"],
+      "env": {
+        "UPSTREAM_BASE_URL": "https://lordsvotes-api.parliament.uk",
+        "UPSTREAM_TIMEOUT_MS": "10000",
+        "USER_AGENT": "@darkhorseone/mcp-server-uk-parliament-lordsvotes/1.0.0"
+      }
+    }
+  }
+}
+```
+
+## Example Usage
+- Fetch a division by id and inspect vote details.
+- Search divisions for a member in a date range.
+- Retrieve total results for a query before paging.
+- Get divisions grouped by party for summary analysis.
+
+## Use Cases
+- AI agents summarizing Lords divisions and voting outcomes.
+- Parliamentary research tools tracking member voting history.
+- Civic tech platforms monitoring vote trends and turnout.
+- Automation pipelines exporting divisions for reporting.
+
+## Data Source
+UK Parliament Lords Votes API
+https://lordsvotes-api.parliament.uk/
+
+## Installation
+Run directly using npx:
+
+```bash
+npx -y -p @darkhorseone/mcp-server-uk-parliament-lordsvotes mcp-server-uk-parliament-lordsvotes
+```
+
+Or install via pnpm from the repository root:
+
+```bash
+pnpm install
 ```
 
 ## Run (HTTP proxy server)
+Build first, then start:
 
 ```bash
 pnpm --filter @darkhorseone/mcp-server-uk-parliament-lordsvotes run build
 pnpm --filter @darkhorseone/mcp-server-uk-parliament-lordsvotes run start:http
+```
+
+Set a custom HTTP port with the `UKPLV_HTTP_PORT` environment variable (default: `8787`):
+
+```bash
+UKPLV_HTTP_PORT=8787 pnpm --filter @darkhorseone/mcp-server-uk-parliament-lordsvotes run start:http
+```
+
+Published package command:
+
+```bash
+npx -y -p @darkhorseone/mcp-server-uk-parliament-lordsvotes -- mcp-server-uk-parliament-lordsvotes-http
+```
+
+If your shell cannot resolve the bin ("command not found"), run the HTTP entrypoint directly:
+
+```bash
+npx -y -p @darkhorseone/mcp-server-uk-parliament-lordsvotes -- node ./dist/http.js
 ```
 
 Health check:
@@ -84,10 +193,22 @@ Health check:
 curl http://127.0.0.1:8787/healthz
 ```
 
-## Quality checks
+Proxy pattern:
+
+```text
+GET /proxy/<upstream-path>?<query>
+```
+
+Example:
 
 ```bash
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-lordsvotes run test
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-lordsvotes run typecheck
-pnpm --filter @darkhorseone/mcp-server-uk-parliament-lordsvotes run build
+curl "http://127.0.0.1:8787/proxy/data/Divisions/search?SearchTerm=education&take=5"
 ```
+
+## License
+MIT License
+
+## MCP Metadata
+Protocol: Model Context Protocol
+Transport: stdio
+Tools: get_division_by_id, search_divisions_total_results, search_divisions, get_member_voting_records, get_divisions_grouped_by_party

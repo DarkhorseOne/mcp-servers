@@ -8,7 +8,7 @@ import { registerAllTools, TOOL_COUNT } from './tools/handlers.js';
 export function createStdioServer(): McpServer {
   const server = new McpServer({
     name: '@darkhorseone/mcp-server-uk-parliament-lordsvotes',
-    version: '0.1.0',
+    version: '1.0.0',
   });
 
   registerAllTools(server);
