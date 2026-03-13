@@ -1,10 +1,11 @@
 {
   "name": "@darkhorseone/mcp-server-uk-parliament-members",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MCP server for UK Parliament Members API",
   "license": "MIT",
   "author": "DarkhorseOne Limited",
   "homepage": "https://github.com/DarkhorseOne/mcp-servers",
+  "mcpName": "io.github.nick-ma/uk-parliament-members",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/DarkhorseOne/mcp-servers.git"
